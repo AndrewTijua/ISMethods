@@ -2,6 +2,7 @@ name = "IS Methods"
 authors = ["Benjamin Cox"]
 
 [deps]
+AdvancedHMC = "0bf59076-c3b1-5ca4-86bd-e02cd72cde3d"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 DrWatson = "634d3b9d-ee7a-5ddf-bec9-22491ea816e1"
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"

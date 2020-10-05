@@ -1,7 +1,6 @@
 using DrWatson
 using Optim
 using Distributions
-using Plots
 using LinearAlgebra
 using InvertedIndices
 
@@ -94,5 +93,5 @@ function mpmc_step(
         ores = optimize(optimise_me, pv, LBFGS())
         new_parameters[d] = fs_reconst[d](Optim.minimizer(ores), noopt)
     end
-    return (proposal_samples, new_proposal_weights, new_parameters)
+    return (proposal_samples, new_proposal_weights, new_parameters, sample_weights)
 end
