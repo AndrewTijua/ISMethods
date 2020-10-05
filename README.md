@@ -1,2 +1,1 @@
-This is an awesome new scientific project that uses `DrWatson`!
-
+Implementing various IS methods in a crap attempt at being flexible
