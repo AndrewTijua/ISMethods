@@ -11,6 +11,7 @@ include(srcdir("pop_mc.jl"))
 include(srcdir("gapis.jl"))
 include(srcdir("lais.jl"))
 include(srcdir("n3scheme.jl"))
+include(srcdir("dmpmc.jl"))
 
 # tgt(x, y) =
 #     0.5 * pdf(MvNormal([-5.0, -5.0], [1.0 0.0; 0.0 1.0]), [x, y]) + 0.5 * pdf(MvNormal([5.0, 5.0], [1.0 0.0; 0.0 1.0]), [x, y])
@@ -45,12 +46,12 @@ rcfs = [rcf, rcf]
 pws = [1.0, 1.0]
 parameters = [[[2.0, 2.0], [1.0 0.0; 0.0 1.0]], [[-2.0, -2.0], [1.0 0.0; 0.0 1.0]]]
 nooptim = [[2], [2]]
-global nv = mpmc_step(tgt, pfs, pws, parameters, 500, rcfs, nooptim, 2)
-
-for t = 1:10
-    global nv = mpmc_step(tgt, pfs, nv[2], nv[3], 500, rcfs, nooptim, 2)
-end
-mpc = stratified_resample(nv[1], nv[4])
+# global nv = mpmc_step(tgt, pfs, pws, parameters, 500, rcfs, nooptim, 2)
+#
+# for t = 1:10
+#     global nv = mpmc_step(tgt, pfs, nv[2], nv[3], 500, rcfs, nooptim, 2)
+# end
+# mpc = stratified_resample(nv[1], nv[4])
 
 # plot!(nv[1][1, :], nv[1][2, :], st = :scatter, legend = false)
 # plot!(mpc[1, :], mpc[2, :], st = :scatter, legend = false)
@@ -59,7 +60,7 @@ pfs = [pf1, pf2]
 locations = [[2.0, 2.0], [-2.0, -2.0]]
 scales = [[1.0 0.0; 0.0 1.0], [1.0 0.0; 0.0 1.0]]
 # global nv = gapis_step(tgt, pfs, locations, scales, 250, 0.1, 2)
-#
+
 # for t = 1:40
 #     global nv = gapis_step(tgt, pfs, nv[2], nv[3], 250, 0.1, 2)
 # end
@@ -69,24 +70,45 @@ scales = [[1.0 0.0; 0.0 1.0], [1.0 0.0; 0.0 1.0]]
 init_mvs = [[2.0, 2.0], [-2.0, -2.0]]
 fixed_params = [[1.0 0.0; 0.0 1.0], [1.0 0.0; 0.0 1.0]]
 
-rmm = RWIS_draw_means(tgt, 2, 100, 2, init_mvs; n_adapts = 1000)
+# rmm = RWIS_draw_means(tgt, 2, 100, 2, init_mvs; n_adapts = 1000)
 
 # global nv = LAIS_step(tgt, pfs, 250, 2, fixed_params, init_mvs)
 # global rw = zeros(2, 500, 100)
-global rmf = zeros(2, 500, 100)
-global rsp = zeros(2, 500, 100)
-global rmw = zeros(500, 100)
-for t = 1:100
-    # global rw[:,:,t] = RWIS_step(tgt, pfs, 250, 2, fixed_params, [rmm[1][t], rmm[2][t]])[1]
-    global rw = RWIS_step(tgt, pfs, 250, 2, fixed_params, [rmm[1][t], rmm[2][t]])
-    rmf[:,:,t] = rw[1]
-    rmw[:,t] = rw[2]
-    rsp[:,:,t] = stratified_resample(rw[1], rw[2])
-end
-rsm = stratified_resample(rw[1], rw[2])
+# global rmf = zeros(2, 500, 100)
+# global rsp = zeros(2, 500, 100)
+# global rmw = zeros(500, 100)
+# for t = 1:100
+#     # global rw[:,:,t] = RWIS_step(tgt, pfs, 250, 2, fixed_params, [rmm[1][t], rmm[2][t]])[1]
+#     global rw = RWIS_step(tgt, pfs, 250, 2, fixed_params, [rmm[1][t], rmm[2][t]])
+#     rmf[:,:,t] = rw[1]
+#     rmw[:,t] = rw[2]
+#     rsp[:,:,t] = stratified_resample(rw[1], rw[2])
+# end
+# rsm = stratified_resample(rw[1], rw[2])
+#
+# clonk = reshape(rsp, (2, 500*100))
 
-clonk = reshape(rsp, (2, 500*100))
 # thinby = randsubseq(1:(500*100), 0.02)
 # cln = clonk[:, thinby]
 # plot!(rsm[1, :], rsm[2, :], st = :scatter, legend = false)
-plot!(clonk[1, :], clonk[2, :], st = :scatter, legend = false)
+# plot!(clonk[1, :], clonk[2, :], st = :scatter, legend = false)
+
+global dmf = zeros(2, 500, 100)
+global dsp = zeros(2, 500, 100)
+global dmw = zeros(500, 100)
+global dpm = dm_pmc_step_smpcov(tgt, pfs, init_mvs, scales, 250, 2)
+for t = 1:50
+    global dpm = dm_pmc_step_smpcov(tgt, pfs, dpm[3], dpm[4], 250, 2)
+    dmf[:,:,t] = dpm[1]
+    dmw[:,t] = dpm[2]
+    dsp[:,:,t] = stratified_resample(dpm[1], dpm[2])
+end
+
+dsm = stratified_resample(dpm[1], dpm[2])
+
+cnk = reshape(dsp, (2, 500*100))
+# thinby = randsubseq(1:(500*100), 0.02)
+# cln = clonk[:, thinby]
+# plot!(rsm[1, :], rsm[2, :], st = :scatter, legend = false)
+plot!(cnk[1, :], cnk[2, :], st = :scatter, legend = false)
+plot!(dsm[1, :], dsm[2, :], st = :scatter, legend = false)
