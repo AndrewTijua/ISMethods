@@ -13,12 +13,12 @@ include(srcdir("lais.jl"))
 include(srcdir("n3scheme.jl"))
 include(srcdir("dmpmc.jl"))
 
-# tgt(x, y) =
-#     0.5 * pdf(MvNormal([-5.0, -5.0], [1.0 0.0; 0.0 1.0]), [x, y]) + 0.5 * pdf(MvNormal([5.0, 5.0], [1.0 0.0; 0.0 1.0]), [x, y])
-# tgt(x) = tgt(x[1], x[2])
-
-tgt(x, y) = exp(-1/(2*4^2) * (4 - 10*x - y^2)^2 - x^2 / (2*5^2) - y^2 / (2*5^2))
+tgt(x, y) =
+    0.5 * pdf(MvNormal([-5.0, -5.0], [1.0 0.0; 0.0 1.0]), [x, y]) + 0.5 * pdf(MvNormal([5.0, 5.0], [1.0 0.0; 0.0 1.0]), [x, y])
 tgt(x) = tgt(x[1], x[2])
+
+# tgt(x, y) = exp(-1/(2*4^2) * (4 - 10*x - y^2)^2 - x^2 / (2*5^2) - y^2 / (2*5^2))
+# tgt(x) = tgt(x[1], x[2])
 
 xsq = collect(range(-10, 10, length = 100))
 ysq = xsq
@@ -70,23 +70,23 @@ scales = [[1.0 0.0; 0.0 1.0], [1.0 0.0; 0.0 1.0]]
 init_mvs = [[2.0, 2.0], [-2.0, -2.0]]
 fixed_params = [[1.0 0.0; 0.0 1.0], [1.0 0.0; 0.0 1.0]]
 
-# rmm = RWIS_draw_means(tgt, 2, 100, 2, init_mvs; n_adapts = 1000)
+rmm = RWIS_draw_means(tgt, 2, 100, 2, init_mvs; n_adapts = 1000)
 
 # global nv = LAIS_step(tgt, pfs, 250, 2, fixed_params, init_mvs)
-# global rw = zeros(2, 500, 100)
-# global rmf = zeros(2, 500, 100)
-# global rsp = zeros(2, 500, 100)
-# global rmw = zeros(500, 100)
-# for t = 1:100
-#     # global rw[:,:,t] = RWIS_step(tgt, pfs, 250, 2, fixed_params, [rmm[1][t], rmm[2][t]])[1]
-#     global rw = RWIS_step(tgt, pfs, 250, 2, fixed_params, [rmm[1][t], rmm[2][t]])
-#     rmf[:,:,t] = rw[1]
-#     rmw[:,t] = rw[2]
-#     rsp[:,:,t] = stratified_resample(rw[1], rw[2])
-# end
-# rsm = stratified_resample(rw[1], rw[2])
-#
-# clonk = reshape(rsp, (2, 500*100))
+global rw = zeros(2, 500, 100)
+global rmf = zeros(2, 500, 100)
+global rsp = zeros(2, 500, 100)
+global rmw = zeros(500, 100)
+for t = 1:100
+    # global rw[:,:,t] = RWIS_step(tgt, pfs, 250, 2, fixed_params, [rmm[1][t], rmm[2][t]])[1]
+    global rw = RWIS_step(tgt, pfs, 250, 2, fixed_params, [rmm[1][t], rmm[2][t]])
+    rmf[:,:,t] = rw[1]
+    rmw[:,t] = rw[2]
+    rsp[:,:,t] = stratified_resample(rw[1], rw[2])
+end
+rsm = stratified_resample(rw[1], rw[2])
+
+clonk = reshape(rsp, (2, 500*100))
 
 # thinby = randsubseq(1:(500*100), 0.02)
 # cln = clonk[:, thinby]
@@ -107,8 +107,5 @@ end
 dsm = stratified_resample(dpm[1], dpm[2])
 
 cnk = reshape(dsp, (2, 500*100))
-# thinby = randsubseq(1:(500*100), 0.02)
-# cln = clonk[:, thinby]
-# plot!(rsm[1, :], rsm[2, :], st = :scatter, legend = false)
 plot!(cnk[1, :], cnk[2, :], st = :scatter, legend = false)
-plot!(dsm[1, :], dsm[2, :], st = :scatter, legend = false)
+# plot!(dsm[1, :], dsm[2, :], st = :scatter, legend = false)

@@ -168,10 +168,10 @@ function dm_pmc_step_smpcov(
     weights = zeros(total_samples)
     wden = 0.
 
-    # for n = 1:num_proposals
-        # i_sigma[n] = inv(scales[n])
-        # isq_d_sigma[n] = 1/sqrt(det(scales[n]))
-    # end
+    for n = 1:num_proposals
+        i_sigma[n] = inv(scales[n])
+        isq_d_sigma[n] = 1/sqrt(det(scales[n]))
+    end
 
     for n = 1:num_proposals
         proposal = proposal_functions[n]
@@ -183,7 +183,8 @@ function dm_pmc_step_smpcov(
             weights[k+offset] = target(xnj)
             wden = 0.
             for d = 1:num_proposals
-                wden += pdf(proposal_functions[d](locations[d], scales[d]), xnj)
+                # wden += pdf(proposal_functions[d](locations[d], scales[d]), xnj)
+                wden += rapid_mvn_prec(xnj, locations[d], i_sigma[d], isq_d_sigma[d])
             end
             wden /= num_proposals
             weights[k+offset] /= wden
